@@ -127,8 +127,13 @@ function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gam
 }
 
 async function loadFromAPI() {
-    const allDataRes = await fetch(`https://api.spaceage.mp/v2/aggregate?run=/v2/players&run=/v2/players/${steamId}&run=/v2/factions`);
-    const allData = await allDataRes.json();
+    let allData = {};
+    try {
+        const allDataRes = await fetch(`https://api.spaceage.mp/v2/aggregate?run=/v2/players&run=/v2/players/${steamId}&run=/v2/factions`);
+        allData = await allDataRes.json();
+    } catch (e) {
+        console.error('aggregate', e);
+    }
     loadPlayerData(allData[`/v2/players/${steamId}`]).catch(e => console.error('loadPlayerData', e));
     loadScoreboard(allData['/v2/players']).catch(e => console.error('loadScoreboard', e));
     loadFactionScoreboard(allData['/v2/factions']).catch(e => console.error('loadFactionScoreboard', e));
