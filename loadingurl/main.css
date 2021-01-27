@@ -1,0 +1,91 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+
+#scoreboards {
+    font-weight: bold;
+    flex-direction: row;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: min-content max-content auto max-content max-content min-content max-content auto max-content max-content;
+}
+
+.scoreboard {
+    text-align: left;
+
+    border-radius: 5px;
+    height: 100%;
+}
+
+.scoreboard-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.scoreboard-right {
+    color: #444;
+    padding: 5px;
+    text-align: right;
+}
+
+.scoreboard-left {
+    color: #444;
+    padding: 5px;
+    text-align: left;
+}
+
+body {
+    background-color: #444;
+    color: #ccc;
+}
+
+.faction-freelancer {
+    color: #9e8661;
+}
+
+.faction-miners {
+    color: #804000;
+}
+
+.faction-starfleet {
+    color: #d2d2d2;
+}
+
+.faction-alliance {
+    color: #e521de;
+}
+
+.faction-corporation {
+    color: #0096ff;
+}
+
+.faction-legion {
+    color: #55dd22;
+}
+
+.factionbg-freelancer {
+    background-color: #9e8661;
+}
+
+.factionbg-miners {
+    background-color: #804000;
+}
+
+.factionbg-starfleet {
+    background-color: #d2d2d2;
+}
+
+.factionbg-alliance {
+    background-color: #e521de;
+}
+
+.factionbg-corporation {
+    background-color: #0096ff;
+}
+
+.factionbg-legion {
+    background-color: #55dd22;
+}
+
