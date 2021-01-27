@@ -1,3 +1,5 @@
+'use strict';
+
 const sid64BaseBI = BigInt('76561197960265728');
 const twoBI = BigInt('2');
 
@@ -125,23 +127,33 @@ function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gam
 }
 
 async function loadFromAPI() {
-    loadPlayerData().catch(e => console.error('loadPlayerData', e));
-    loadScoreboard().catch(e => console.error('loadScoreboard', e));
-    loadFactionScoreboard().catch(e => console.error('loadFactionScoreboard', e));
+    const allDataRes = await fetch(`https://api.spaceage.mp/v2/aggregate?run=/v2/players&run=/v2/players/${steamId}&run=/v2/factions`);
+    const allData = await allDataRes.json();
+    loadPlayerData(allData[`/v2/players/${steamId}`]).catch(e => console.error('loadPlayerData', e));
+    loadScoreboard(allData['/v2/players']).catch(e => console.error('loadScoreboard', e));
+    loadFactionScoreboard(allData['/v2/factions']).catch(e => console.error('loadFactionScoreboard', e));
 }
 
-async function loadFactionScoreboard() {
-    const factionRes = await fetch('https://api.spaceage.mp/v2/factions');
-    const factionData = await factionRes.json();
+async function loadFactionScoreboard(factionData) {
+    if (factionData && factionData.code === 200) {
+        factionData = factionData.data;
+    } else {
+        const factionRes = await fetch('https://api.spaceage.mp/v2/factions');
+        factionData = await factionRes.json();
+    }
 
     await playerDataLoadedPromise;
 
     formatScoreboard(factionData, 6, 0, factionData.length, (d) => d.faction_name == factionName);
 }
 
-async function loadScoreboard() {
-    const scoreboardRes = await fetch('https://api.spaceage.mp/v2/players');
-    const scoreboardData = await scoreboardRes.json();
+async function loadScoreboard(scoreboardData) {
+    if (scoreboardData && scoreboardData.code === 200) {
+        scoreboardData = scoreboardData.data;
+    } else {
+        const scoreboardRes = await fetch('https://api.spaceage.mp/v2/players');
+        scoreboardData = await scoreboardRes.json();
+    }
 
     let ourI = -1;
     for (let i = 0; i < scoreboardData.length; i++) {
@@ -164,9 +176,24 @@ async function loadScoreboard() {
     formatScoreboard(scoreboardData, 1, minI, maxI, (d) => d.steamid == steamId);
 }
 
-async function loadPlayerData() {
-    const playerRes = await fetch(`https://api.spaceage.mp/v2/players/${steamId}`);
-    const playerData = await playerRes.json();
+async function loadPlayerData(playerData) {
+    if (playerData && (playerData.code === 200 || playerData.code === 404)) {
+        playerData = playerData.data;
+    } else {
+        const playerRes = await fetch(`https://api.spaceage.mp/v2/players/${steamId}`);
+        playerData = await playerRes.json();
+    }
+
+    if (!playerData || !playerData.name) {
+        playerData = {
+            faction_name: 'freelancer',
+            name: 'User',
+            score: 0,
+            credits: 0,
+            playtime: 0,
+        };
+    }
+
     factionName = playerData.faction_name;
 
     playerDataLoadedPromiseResolve();
