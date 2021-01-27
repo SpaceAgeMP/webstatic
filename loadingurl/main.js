@@ -1,5 +1,3 @@
-'use strict';
-
 const sid64BaseBI = BigInt('76561197960265728');
 const twoBI = BigInt('2');
 
