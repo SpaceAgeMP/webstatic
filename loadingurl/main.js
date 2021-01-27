@@ -127,11 +127,9 @@ function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gam
 }
 
 async function loadFromAPI() {
-    await Promise.allSettled([
-        loadPlayerData().catch(e => console.error('loadPlayerData', e)),
-        loadScoreboard().catch(e => console.error('loadScoreboard', e)),
-        loadFactionScoreboard().catch(e => console.error('loadFactionScoreboard', e)),
-    ]);
+    loadPlayerData().catch(e => console.error('loadPlayerData', e));
+    loadScoreboard().catch(e => console.error('loadScoreboard', e));
+    loadFactionScoreboard().catch(e => console.error('loadFactionScoreboard', e));
 }
 
 async function loadFactionScoreboard() {
