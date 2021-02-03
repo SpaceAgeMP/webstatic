@@ -68,18 +68,21 @@ function formatScoreboard(sb, gb, minI, maxI) {
 
         const sbPlace = document.createElement('div');
         sbPlace.classList.add('scoreboard-right');
+        sbPlace.classList.add(`factiontext-${placeData.faction_name}`);
         sbPlace.innerText = `${place}.`;
         sbPlace.style = `grid-column: ${gb}; ${rowCode}`;
         scoreboardContainer.appendChild(sbPlace);
         
         const sbName = document.createElement('div');
         sbName.classList.add('scoreboard-left');
+        sbName.classList.add(`factiontext-${placeData.faction_name}`);
         sbName.innerText = placeData.name || factionToLongTable[placeData.faction_name] || placeData.faction_name || 'N/A';
         sbName.style = `grid-column: ${gb + 1}; ${rowCode}`;
         scoreboardContainer.appendChild(sbName);
         
         const sbScore = document.createElement('div');
         sbScore.classList.add('scoreboard-right');
+        sbScore.classList.add(`factiontext-${placeData.faction_name}`);
         sbScore.innerText = addCommasToInt(placeData.score);
         sbScore.style = `grid-column: ${gb + 2}; ${rowCode}`;
         scoreboardContainer.appendChild(sbScore);
@@ -87,6 +90,7 @@ function formatScoreboard(sb, gb, minI, maxI) {
         if (placeData.playtime) {
             const sbPlaytime = document.createElement('div');
             sbPlaytime.classList.add('scoreboard-left');
+            sbPlaytime.classList.add(`factiontext-${placeData.faction_name}`);
             sbPlaytime.innerText = formatTime(placeData.playtime);
             sbPlaytime.style = `grid-column: ${gb + 3}; ${rowCode}`;
             scoreboardContainer.appendChild(sbPlaytime);

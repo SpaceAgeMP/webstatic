@@ -81,6 +81,10 @@ body {
     background-color: #9e8661;
 }
 
+.factiontext-miners {
+    color: #ccc;
+}
+
 .factionbg-miners {
     background-color: #804000;
 }
