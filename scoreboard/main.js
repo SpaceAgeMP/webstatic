@@ -2,7 +2,7 @@
 
 const factionToLongTable = {
     freelancer: 'Freelancers',
-    starfleet: 'Star Fleet',
+    ice: 'I.C.E.',
     legion: 'The Legion',
     miners: 'Major Miners',
     corporation: 'The Corporation',
