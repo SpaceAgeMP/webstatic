@@ -12,6 +12,7 @@ const DEFAULT_PLAYER = {
 };
 
 let steamId = undefined;
+let serverName = undefined;
 
 const factionToLongTable = {
     freelancer: 'Freelancers',
@@ -119,13 +120,20 @@ function formatScoreboard(sb, gb, minI, maxI, checkIsUs) {
     }
 }
 
-function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gamemode, _volume, _language) {
-    populateIfExists('servername', servername);
-    populateIfExists('mapname', mapname);
-    populateIfExists('maxplayers', maxplayers);
-    populateIfExists('gamemode', gamemode);
+function GameDetails(serverNameRaw, _serverURL, mapName, maxPlayers, steamId64, gameMode, _volume, _language) {
+    const m = serverNameRaw.match(/SpaceAge \[(.+)\]/);
+    if (m && m[1]) {
+        serverName = m[1];
+    } else {
+        serverName = serverNameRaw;
+    }
 
-    const sid64BI = BigInt(steamid64) - sid64BaseBI;
+    populateIfExists('servername', serverName);
+    populateIfExists('mapname', mapName);
+    populateIfExists('maxplayers', maxPlayers);
+    populateIfExists('gamemode', gameMode);
+
+    const sid64BI = BigInt(steamId64) - sid64BaseBI;
     steamId = `STEAM_0:${sid64BI % twoBI}:${sid64BI / twoBI}`;
     populateIfExists('steamid', steamId);
 
@@ -133,7 +141,9 @@ function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gam
 }
 
 function parseURLVars(url) {
-    return url.replace('__STEAMID__', steamId);
+    return url
+        .replace('__STEAMID__', steamId)
+        .replace('__SERVERNAME__', serverName);
 }
 
 async function aggregateLoad(urls) {
@@ -242,6 +252,15 @@ async function loadPlayerData(playerData) {
 }
 registerAPILoader(loadPlayerData, ['/v2/players/__STEAMID__']);
 
+async function loadServerData(serverData) {
+    if (!serverData) {
+        return;
+    }
+
+    populateIfExists('players', serverData.players.length);
+}
+registerAPILoader(loadServerData, ['/v2/servers/__SERVERNAME__']);
+
 function SetFilesTotal(total) { }
 function DownloadingFile(fileName) { }
 function SetStatusChanged(status) { }
@@ -249,6 +268,6 @@ function SetFilesNeeded(needed) { }
 
 function loaded() {
     if (document.location.protocol === 'file:') {
-        GameDetails("A", "B", "C", 64, "76561197971055508", "D", 1, "en");
+        GameDetails('SpaceAge [Betelgeuse]', 'https://static.spaceage.mp/loadingurl/', 'sb_gooniverse_v4', 16, '76561197971055508', 'spaceage', 1, 'en');
     }
 }
