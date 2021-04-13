@@ -3,9 +3,14 @@
 const sid64BaseBI = BigInt('76561197960265728');
 const twoBI = BigInt('2');
 
-let playerDataLoadedPromiseResolve = undefined;
-let playerDataLoadedPromise = undefined;
-let factionName = undefined;
+const DEFAULT_PLAYER = {
+    faction_name: 'freelancer',
+    name: 'User',
+    score: 0,
+    credits: 0,
+    playtime: 0,
+};
+
 let steamId = undefined;
 
 const factionToLongTable = {
@@ -17,13 +22,13 @@ const factionToLongTable = {
     alliance: 'The Alliance',
 };
 
-function populateIfExists(id, data, addFaction) {
+function populateIfExists(id, data, factionName) {
     const ele = document.getElementById(id);
     if (ele) {
         if (data !== undefined) {
             ele.innerText = data;
         }
-        if (addFaction && factionName) {
+        if (factionName) {
             ele.classList.add(`faction-${factionName}`);
         }
     }
@@ -124,10 +129,11 @@ function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gam
     steamId = `STEAM_0:${sid64BI % twoBI}:${sid64BI / twoBI}`;
     populateIfExists('steamid', steamId);
 
-    playerDataLoadedPromise = new Promise((resolve) => {
-        playerDataLoadedPromiseResolve = resolve;
-        loadFromAPI().catch(e => console.error('loadFromAPI', e));
-    });
+    loadFromAPI().catch(e => console.error('loadFromAPI', e));
+}
+
+function parseURLVars(url) {
+    return url.replace('__STEAMID__', steamId);
 }
 
 async function aggregateLoad(urls) {
@@ -156,27 +162,51 @@ async function aggregateLoad(urls) {
     return allData;
 }
 
-async function loadFromAPI() {
-    const allData = await aggregateLoad([
-        `/v2/players/${steamId}`,
-        '/v2/players',
-        '/v2/factions',
-    ]);
-    loadPlayerData(allData[`/v2/players/${steamId}`]).catch(e => console.error('loadPlayerData', e));
-    loadScoreboard(allData['/v2/players']).catch(e => console.error('loadScoreboard', e));
-    loadFactionScoreboard(allData['/v2/factions']).catch(e => console.error('loadFactionScoreboard', e));
+async function extractData(data) {
+    const res = await data;
+    if (res.status !== 200) {
+        return undefined;
+    }
+    return res.data;
 }
 
-async function loadFactionScoreboard(factionData) {
-    factionData = (await factionData).data;
+async function callLoader(loader, allData) {
+    const callArgs = loader._urls.map(url => allData[url]);
+    for (const idx in callArgs) {
+        callArgs[idx] = await extractData(callArgs[idx]);
+    }
+    await loader.func.apply(null, callArgs);
+}
 
-    await playerDataLoadedPromise;
+const APILoaders = [];
+async function loadFromAPI() {
+    const urls = new Set();
+    for (const loader of APILoaders) {
+        loader._urls = loader.urls.map(parseURLVars);
+        urls.add(...loader._urls);
+    }
+    const allData = await aggregateLoad([...urls]);
+    for (const loader of APILoaders) {
+        callLoader(loader, allData).catch(e => console.error(loader.func.name, e));
+    }
+}
 
+function registerAPILoader(func, urls, dependencies=[]) {
+    APILoaders.push({
+        func,
+        urls,
+        dependencies,
+    });
+}
+
+async function loadFactionScoreboard(factionData, playerData) {
+    const factionName = (playerData && playerData.faction_name) || DEFAULT_PLAYER.faction_name;
     formatScoreboard(factionData, 6, 0, factionData.length, (d) => d.faction_name == factionName);
 }
+registerAPILoader(loadFactionScoreboard, ['/v2/factions', '/v2/players/__STEAMID__']);
 
 async function loadScoreboard(scoreboardData) {
-    scoreboardData = (await scoreboardData).data;
+    console.log(scoreboardData);
 
     let ourI = -1;
     for (let i = 0; i < scoreboardData.length; i++) {
@@ -198,31 +228,21 @@ async function loadScoreboard(scoreboardData) {
     }
     formatScoreboard(scoreboardData, 1, minI, maxI, (d) => d.steamid == steamId);
 }
+registerAPILoader(loadScoreboard, ['/v2/players']);
 
 async function loadPlayerData(playerData) {
-    playerData = (await playerData).data;
-
     if (!playerData || !playerData.name) {
-        playerData = {
-            faction_name: 'freelancer',
-            name: 'User',
-            score: 0,
-            credits: 0,
-            playtime: 0,
-        };
+        playerData = DEFAULT_PLAYER;
     }
 
-    factionName = playerData.faction_name;
-
-    playerDataLoadedPromiseResolve();
-
-    populateIfExists('name', playerData.name, true);
+    populateIfExists('name', playerData.name, playerData.faction_name);
     populateIfExists('score', addCommasToInt(playerData.score));
     populateIfExists('credits', addCommasToInt(playerData.credits));
     populateIfExists('playtime', formatTime(playerData.playtime));
 
     document.getElementById('playerData').style.display = '';
 }
+registerAPILoader(loadPlayerData, ['/v2/players/__STEAMID__']);
 
 function SetFilesTotal(total) { }
 function DownloadingFile(fileName) { }
