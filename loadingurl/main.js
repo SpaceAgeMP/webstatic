@@ -206,8 +206,6 @@ async function loadFactionScoreboard(factionData, playerData) {
 registerAPILoader(loadFactionScoreboard, ['/v2/factions', '/v2/players/__STEAMID__']);
 
 async function loadScoreboard(scoreboardData) {
-    console.log(scoreboardData);
-
     let ourI = -1;
     for (let i = 0; i < scoreboardData.length; i++) {
         const placePlayer = scoreboardData[i];
