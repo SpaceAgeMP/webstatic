@@ -134,7 +134,7 @@ async function aggregateLoad(urls) {
     let allData = {};
     try {
         const allDataRes = await fetch(`https://api.spaceage.mp/cdn/aggregate?${urls.map(u => `run=${encodeURIComponent(u)}`).join('&')}`);
-        if (allData.status === 200) {
+        if (allDataRes.status === 200) {
             allData = await allDataRes.json();
         }
     } catch (e) {
