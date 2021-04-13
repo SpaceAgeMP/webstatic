@@ -130,26 +130,45 @@ function GameDetails(servername, _serverurl, mapname, maxplayers, steamid64, gam
     });
 }
 
-async function loadFromAPI() {
+async function aggregateLoad(urls) {
     let allData = {};
-    /*try {
-        const allDataRes = await fetch(`https://api.spaceage.mp/cdn/aggregate?run=/v2/players&run=/v2/players/${steamId}&run=/v2/factions`);
-        allData = await allDataRes.json();
+    try {
+        const allDataRes = await fetch(`https://api.spaceage.mp/cdn/aggregate?${urls.map(u => `run=${encodeURIComponent(u)}`).join('&')}`);
+        if (allData.status === 200) {
+            allData = await allDataRes.json();
+        }
     } catch (e) {
         console.error('aggregate', e);
-    }*/
+    }
+
+    for (const url of urls) {
+        if (allData[url]) {
+            continue;
+        }
+        allData[url] = fetch(`https://api.spaceage.mp${url}`).then(async res => {
+            return {
+                data: await res.json(),
+                status: res.status,
+            };
+        });
+    }
+
+    return allData;
+}
+
+async function loadFromAPI() {
+    const allData = await aggregateLoad([
+        `/v2/players/${steamId}`,
+        '/v2/players',
+        '/v2/factions',
+    ]);
     loadPlayerData(allData[`/v2/players/${steamId}`]).catch(e => console.error('loadPlayerData', e));
     loadScoreboard(allData['/v2/players']).catch(e => console.error('loadScoreboard', e));
     loadFactionScoreboard(allData['/v2/factions']).catch(e => console.error('loadFactionScoreboard', e));
 }
 
 async function loadFactionScoreboard(factionData) {
-    if (factionData && factionData.code === 200) {
-        factionData = factionData.data;
-    } else {
-        const factionRes = await fetch('https://api.spaceage.mp/v2/factions');
-        factionData = await factionRes.json();
-    }
+    factionData = (await factionData).data;
 
     await playerDataLoadedPromise;
 
@@ -157,12 +176,7 @@ async function loadFactionScoreboard(factionData) {
 }
 
 async function loadScoreboard(scoreboardData) {
-    if (scoreboardData && scoreboardData.code === 200) {
-        scoreboardData = scoreboardData.data;
-    } else {
-        const scoreboardRes = await fetch('https://api.spaceage.mp/v2/players');
-        scoreboardData = await scoreboardRes.json();
-    }
+    scoreboardData = (await scoreboardData).data;
 
     let ourI = -1;
     for (let i = 0; i < scoreboardData.length; i++) {
@@ -186,12 +200,7 @@ async function loadScoreboard(scoreboardData) {
 }
 
 async function loadPlayerData(playerData) {
-    if (playerData && (playerData.code === 200 || playerData.code === 404)) {
-        playerData = playerData.data;
-    } else {
-        const playerRes = await fetch(`https://api.spaceage.mp/v2/players/${steamId}`);
-        playerData = await playerRes.json();
-    }
+    playerData = (await playerData).data;
 
     if (!playerData || !playerData.name) {
         playerData = {
