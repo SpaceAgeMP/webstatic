@@ -3,9 +3,6 @@
 const sid64BaseBI = BigInt('76561197960265728');
 const twoBI = BigInt('2');
 
-let steamId = undefined;
-let serverName = undefined;
-
 const DEFAULT_PLAYER = {
     faction_name: 'freelancer',
     name: 'User',
@@ -124,12 +121,6 @@ function formatScoreboard(sb, gb, minI, maxI, checkIsUs) {
     }
 }
 
-function parseURLVars(url) {
-    return url
-        .replace('__STEAMID__', steamId)
-        .replace('__SERVERNAME__', serverName);
-}
-
 async function aggregateLoad(urls) {
     let allData = {};
     if (urls.length > 1) {
@@ -175,10 +166,10 @@ async function callLoader(loader, allData) {
 }
 
 const APILoaders = [];
-async function _loadFromAPI() {
+async function _loadFromAPI(parseURLVars) {
     const urls = new Set();
     for (const loader of APILoaders) {
-        loader._urls = loader.urls.map(parseURLVars);
+        loader._urls = parseURLVars ? loader.urls.map(parseURLVars) : loader.urls;
         urls.add(...loader._urls);
     }
     const allData = await aggregateLoad([...urls]);
@@ -187,8 +178,8 @@ async function _loadFromAPI() {
     }
 }
 
-function loadFromAPI() {
-    _loadFromAPI().catch(e => console.error('loadFromAPI', e));
+function loadFromAPI(parseURLVars) {
+    _loadFromAPI(parseURLVars).catch(e => console.error('loadFromAPI', e));
 }
 
 function registerAPILoader(func, urls, dependencies=[]) {

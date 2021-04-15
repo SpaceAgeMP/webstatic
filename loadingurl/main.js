@@ -1,5 +1,8 @@
 'use strict';
 
+let steamId = undefined;
+let serverName = undefined;
+
 function GameDetails(serverNameRaw, _serverURL, mapName, maxPlayers, steamId64, gameMode, _volume, _language) {
     const m = serverNameRaw.match(/SpaceAge \[(.+)\]/);
     if (m && m[1]) {
@@ -16,8 +19,8 @@ function GameDetails(serverNameRaw, _serverURL, mapName, maxPlayers, steamId64, 
     const sid64BI = BigInt(steamId64) - sid64BaseBI;
     steamId = `STEAM_0:${sid64BI % twoBI}:${sid64BI / twoBI}`;
     populateIfExists('steamid', steamId);
-
-    loadFromAPI();
+    
+    loadFromAPI(url => url.replace('__STEAMID__', steamId).replace('__SERVERNAME__', serverName));
 }
 
 function loadFactionScoreboard(factionData, playerData) {
