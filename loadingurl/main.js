@@ -1,8 +1,5 @@
 'use strict';
 
-let steamId = undefined;
-let serverName = undefined;
-
 function GameDetails(serverNameRaw, _serverURL, mapName, maxPlayers, steamId64, gameMode, _volume, _language) {
     const m = serverNameRaw.match(/SpaceAge \[(.+)\]/);
     if (m && m[1]) {
@@ -20,76 +17,7 @@ function GameDetails(serverNameRaw, _serverURL, mapName, maxPlayers, steamId64, 
     steamId = `STEAM_0:${sid64BI % twoBI}:${sid64BI / twoBI}`;
     populateIfExists('steamid', steamId);
 
-    loadFromAPI().catch(e => console.error('loadFromAPI', e));
-}
-
-function parseURLVars(url) {
-    return url
-        .replace('__STEAMID__', steamId)
-        .replace('__SERVERNAME__', serverName);
-}
-
-async function aggregateLoad(urls) {
-    let allData = {};
-    try {
-        const allDataRes = await fetch(`https://api.spaceage.mp/cdn/aggregate?${urls.sort().map(u => `run=${encodeURIComponent(u)}`).join('&')}`);
-        if (allDataRes.status === 200) {
-            allData = await allDataRes.json();
-        }
-    } catch (e) {
-        console.error('aggregate', e);
-    }
-
-    for (const url of urls) {
-        if (allData[url]) {
-            continue;
-        }
-        allData[url] = fetch(`https://api.spaceage.mp${url}`).then(async res => {
-            return {
-                data: await res.json(),
-                status: res.status,
-            };
-        });
-    }
-
-    return allData;
-}
-
-async function extractData(data) {
-    const res = await data;
-    if (res.status !== 200) {
-        return undefined;
-    }
-    return res.data;
-}
-
-async function callLoader(loader, allData) {
-    const callArgs = loader._urls.map(url => allData[url]);
-    for (const idx in callArgs) {
-        callArgs[idx] = await extractData(callArgs[idx]);
-    }
-    await loader.func.apply(null, callArgs);
-}
-
-const APILoaders = [];
-async function loadFromAPI() {
-    const urls = new Set();
-    for (const loader of APILoaders) {
-        loader._urls = loader.urls.map(parseURLVars);
-        urls.add(...loader._urls);
-    }
-    const allData = await aggregateLoad([...urls]);
-    for (const loader of APILoaders) {
-        callLoader(loader, allData).catch(e => console.error(loader.func.name, e));
-    }
-}
-
-function registerAPILoader(func, urls, dependencies=[]) {
-    APILoaders.push({
-        func,
-        urls,
-        dependencies,
-    });
+    loadFromAPI();
 }
 
 async function loadFactionScoreboard(factionData, playerData) {
