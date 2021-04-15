@@ -20,13 +20,13 @@ function GameDetails(serverNameRaw, _serverURL, mapName, maxPlayers, steamId64, 
     loadFromAPI();
 }
 
-async function loadFactionScoreboard(factionData, playerData) {
+function loadFactionScoreboard(factionData, playerData) {
     const factionName = (playerData && playerData.faction_name) || DEFAULT_PLAYER.faction_name;
     formatScoreboard(factionData, 6, 0, factionData.length, (d) => d.faction_name == factionName);
 }
 registerAPILoader(loadFactionScoreboard, ['/v2/factions', '/v2/players/__STEAMID__']);
 
-async function loadScoreboard(scoreboardData) {
+function loadScoreboard(scoreboardData) {
     let ourI = -1;
     for (let i = 0; i < scoreboardData.length; i++) {
         const placePlayer = scoreboardData[i];
@@ -49,7 +49,7 @@ async function loadScoreboard(scoreboardData) {
 }
 registerAPILoader(loadScoreboard, ['/v2/players']);
 
-async function loadPlayerData(playerData) {
+function loadPlayerData(playerData) {
     if (!playerData || !playerData.name) {
         playerData = DEFAULT_PLAYER;
     }
@@ -63,7 +63,7 @@ async function loadPlayerData(playerData) {
 }
 registerAPILoader(loadPlayerData, ['/v2/players/__STEAMID__']);
 
-async function loadServerData(serverData) {
+function loadServerData(serverData) {
     if (!serverData) {
         return;
     }

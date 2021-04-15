@@ -1,10 +1,10 @@
 'use strict';
 
-async function loadFactionScoreboard(factionData) {
+function loadFactionScoreboard(factionData) {
     formatScoreboard(factionData, 1, 0, factionData.length);
 }
 
-async function loadScoreboard(scoreboardData) {
+function loadScoreboard(scoreboardData) {
     formatScoreboard(scoreboardData, 1, 0, scoreboardData.length);
 }
 
